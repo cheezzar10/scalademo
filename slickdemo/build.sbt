@@ -18,5 +18,12 @@ lazy val root = (project in file("."))
         )
     )
 
-// TODO also it's possible to pass -target:jvm-1.8
-scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-feature", "-Xlint", "-Xfatal-warnings")
+// also it's possible to pass -target:jvm-1.8 ( almost useless for 2.11 )
+// -Xprint:typer can be added to debug implicits
+scalacOptions ++= Seq(
+    "-encoding", 
+    "UTF-8", 
+    "-deprecation", 
+    "-feature", 
+    "-Xlint", 
+    "-Xfatal-warnings")
