@@ -16,14 +16,31 @@ object CarDemo {
 
         // TODO abstract over database type ( see ES 5.1.1 )
         createCarTable(db)
+
+        insertNewCars(db)
+
+        // TODO load records from DB
+    }
+
+    private def insertNewCars(db: Database): Unit = {
+        println("inserting new records to CAR table")
+
+        val car = TableQuery[CarTable]
+
+        val insert = car ++= Seq(Car("BMW", "320d"), Car("BMW", "325d"))
+
+        val insertActionResult = Await.result(db.run(insert), Duration.Inf)
+
+        println("records added to CAR table")
+
     }
 
     private def createCarTable(db: Database): Unit = {
         println("creating CAR table")
 
         val carTable = TableQuery[CarTable]
-        val createCarTableAction = carTable.schema.create
-        val createCarTableActionResult = Await.result(db.run(createCarTableAction), Duration.Inf)
+
+        val createCarTableActionResult = Await.result(db.run(carTable.schema.create), Duration.Inf)
 
         println(s"CAR table creation result: $createCarTableActionResult")
     }
