@@ -8,6 +8,7 @@ case class Car(
     model: String, 
     id: Long = 0)
 
+// TODO basically this class should be named Cars
 class CarTable(tag: Tag) extends Table[Car](tag, "car") {
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
