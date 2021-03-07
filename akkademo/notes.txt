@@ -1,0 +1,11 @@
+compiling project
+
+$ mvn clean package
+
+running application from terminal
+
+$ scala -cp target/akka-demo-0.1.0-SNAPSHOT.jar com.onef.edu.akka.Main
+
+running application using maven
+
+$ mvn scala:run -DmainClass=com.onef.edu.akka.Main
