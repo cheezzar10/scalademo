@@ -1,8 +1,10 @@
 package com.onef.edu.akka
 
 import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
-
 import java.util.{Map => JMap}
+
+import akka.actor.ActorSystem
+
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 
@@ -12,7 +14,7 @@ object Main {
 
     dumpConfig(config)
 
-
+    // val system = ActorSystem("taskmanager")
   }
 
   private def dumpConfig(config: Config): Unit = {

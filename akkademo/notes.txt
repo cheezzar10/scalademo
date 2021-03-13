@@ -12,3 +12,7 @@ $ mvn scala:run -DmainClass=com.onef.edu.akka.Main
 
 see https://docs.scala-lang.org/tutorials/scala-with-maven.html for details how to import maven managed
 Scala project to eclipse
+
+running packaged application using java command
+
+$ java -cp  target/akka-demo-0.1.0-SNAPSHOT-jar-with-dependencies.jar com.onef.edu.akka.taskmgr.Main
