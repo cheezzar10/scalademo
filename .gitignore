@@ -1,7 +1,11 @@
-/target/
+target
 .cache-main
 .classpath
 .project
 .settings
 *.iml
 .idea
+.bloop
+.metals
+.vscode
+project

@@ -49,7 +49,10 @@ object CachedFuturesDemo {
         println("pipeline loading process failed: " + ex)
 
         ex match {
-          case plex: PipelineLoadingException => cache.remove(plex.name)
+          case plex: PipelineLoadingException => {
+            println("removing failed pipeline loading attempt from cache")
+            cache.remove(plex.name)
+          }
         }
       }
     }
