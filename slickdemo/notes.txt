@@ -1,1 +1,5 @@
 Slick exploration notes
+
+1. running project using maven
+
+$ mvn scala:run -DmainClass=com.onef.CarDemo
