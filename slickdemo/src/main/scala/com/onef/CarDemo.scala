@@ -1,5 +1,8 @@
 package com.onef
 
+import java.nio.file.{Files, Paths}
+
+import javax.sql.rowset.serial.SerialBlob
 import slick.jdbc.H2Profile.backend.Database
 
 // use postgres instead
@@ -88,7 +91,12 @@ object CarDemo {
     // TODO can be expressed as val cars = TableQuery[Cars]
     val car = TableQuery[CarTable]
 
-    val insert = car ++= Seq(Car("BMW", "320d"), Car("BMW", "325d"))
+    val imageBytes = Files.readAllBytes(Paths.get("/Volumes/Data/Users/andrey/Downloads/320d.jpg"))
+    val imageBlob = new SerialBlob(imageBytes)
+
+    val insert = car ++= Seq(
+      Car("BMW", "320d", imageBlob),
+      Car("BMW", "325d", imageBlob))
 
     val insertActionResult = Await.result(db.run(insert), Duration.Inf)
 
@@ -110,7 +118,8 @@ object CarDemo {
   }
 
   private def tupledCreation(): Car = {
-    val carTuple = ("BMW", "320d", 1L)
+    val imageBlob = new SerialBlob(Array.empty[Byte])
+    val carTuple = ("BMW", "320d", imageBlob, 1L)
 
     val car = Car.tupled(carTuple)
 
