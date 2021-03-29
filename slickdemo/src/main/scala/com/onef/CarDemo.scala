@@ -11,6 +11,8 @@ import slick.jdbc.H2Profile.api._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 object CarDemo {
   def main(args: Array[String]): Unit = {
     val newCar = tupledCreation()
@@ -19,7 +21,7 @@ object CarDemo {
     val db = Database.forConfig("car")
 
     // TODO abstract over database type ( see ES 5.1.1 )
-    createCarTable(db)
+    createDbSchema(db)
 
     insertNewCars(db)
 
@@ -88,38 +90,46 @@ object CarDemo {
   private def insertNewCars(db: Database): Unit = {
     println("inserting new records to CAR table")
 
-    // TODO can be expressed as val cars = TableQuery[Cars]
-    val car = TableQuery[CarTable]
-
-    val imageBytes = Files.readAllBytes(Paths.get("/Volumes/Data/Users/andrey/Downloads/320d.jpg"))
+    val imageBytes = Files.readAllBytes(Paths.get(sys.props("user.home"), "Downloads", "320d.jpg"))
     val imageBlob = new SerialBlob(imageBytes)
 
-    val insert = car ++= Seq(
-      Car("BMW", "320d", imageBlob),
-      Car("BMW", "325d", imageBlob))
+    import Owners.Owners
 
-    val insertActionResult = Await.result(db.run(insert), Duration.Inf)
+    // 1. insert owner
+    val ownersReturningId = Owners returning Owners.map(_.id)
 
-    println("records added to CAR table")
+    val ownerCreationAction = ownersReturningId += Owner("Billy", "Bones")
 
+    import Cars.Cars
+
+    def insertCars(ownerId: Long) = Cars ++= Seq(
+      Car("BMW", "320d", imageBlob, ownerId),
+      Car("BMW", "325d", imageBlob, ownerId))
+
+    val insert = ownerCreationAction.flatMap { ownerId =>
+      insertCars(ownerId)
+    }
+
+    val insertActionResult = Await.result(db.run(insert.transactionally), Duration.Inf)
+
+    println("records added to CAR table with result: " + insertActionResult)
   }
 
-  private def createCarTable(db: Database): Unit = {
-    println("creating CAR table")
+  private def createDbSchema(db: Database): Unit = {
+    println("creating DB schema")
 
-    val carTable = TableQuery[CarTable]
+    val schemaCreationAction = Owners.Owners.schema.create andThen Cars.Cars.schema.create
 
-    // all schema creation actions should be combined using asTry to
-
-    val createTableActivity = db.run(carTable.schema.create)
+    val createTableActivity = db.run(schemaCreationAction)
     Await.ready(createTableActivity, Duration.Inf)
 
-    println(s"CAR table creation activity: $createTableActivity")
+    println(s"DB schema creation activity: $createTableActivity")
   }
 
   private def tupledCreation(): Car = {
     val imageBlob = new SerialBlob(Array.empty[Byte])
-    val carTuple = ("BMW", "320d", imageBlob, 1L)
+    val ownerId = 2L
+    val carTuple = ("BMW", "320d", imageBlob, ownerId, 1L)
 
     val car = Car.tupled(carTuple)
 

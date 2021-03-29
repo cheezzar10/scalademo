@@ -10,6 +10,7 @@ case class Car(
                 name: String,
                 model: String,
                 image: Blob,
+                ownerId: Long,
                 id: Long = 0)
 
 // TODO basically this class should be named Cars
@@ -22,5 +23,13 @@ class CarTable(tag: Tag) extends Table[Car](tag, "car") {
 
   def image = column[Blob]("image")
 
-  override def * = (name, model, image, id).mapTo[Car]
+  def ownerId = column[Long]("owner_id")
+
+  override def * = (name, model, image, ownerId, id).mapTo[Car]
+
+  def owner = foreignKey("owner_fk", ownerId, Owners.Owners)(_.id)
+}
+
+object Cars {
+  lazy val Cars = TableQuery[CarTable]
 }
