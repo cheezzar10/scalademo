@@ -15,6 +15,7 @@
     <scala.version>${scala.binary.version}.12</scala.version>
     <commons.lang.version>3.5</commons.lang.version>
     <scalatest.version>3.0.5</scalatest.version>
+    <json4s.version>3.6.11</json4s.version>
   </properties>
 
   <dependencies>
@@ -32,6 +33,11 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>${commons.lang.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.json4s</groupId>
+      <artifactId>json4s-jackson_${scala.binary.version}</artifactId>
+      <version>${json4s.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
