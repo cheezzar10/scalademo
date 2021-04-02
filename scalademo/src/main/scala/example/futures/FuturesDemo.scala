@@ -1,12 +1,13 @@
-package example
+package example.futures
+
+import example.Logger.log
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import Logger.log
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object Futures {
+object FuturesDemo {
   def main(args: Array[String]): Unit = {
     val asyncActivity = Future {
       log("async activity started")
