@@ -64,6 +64,7 @@
             <arg>-feature</arg>
             <arg>-Xlint</arg>
             <arg>-Xfatal-warnings</arg>
+            <arg>-language:higherKinds</arg>
           </args>
           <displayCmd>true</displayCmd>
         </configuration>
