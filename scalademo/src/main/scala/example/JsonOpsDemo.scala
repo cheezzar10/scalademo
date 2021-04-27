@@ -8,12 +8,12 @@ import org.json4s.{Formats, ShortTypeHints}
 import org.json4s.jackson.Serialization
 
 sealed trait ProcessingStep {
-  def copyValues(values: Map[String, String]): ProcessingStep
+  def copyValues(values: Map[String, _]): ProcessingStep
 }
 
 case class StartSessionStep(sessionId: Option[String] = None) extends ProcessingStep {
-  override def copyValues(values: Map[String, String])= {
-    copy(sessionId = values.get("sessionId"))
+  override def copyValues(values: Map[String, _])= {
+    copy(sessionId = values.get("sessionId").map(_.asInstanceOf[String]))
   }
 }
 
@@ -21,14 +21,16 @@ case class DatasetLoadStep(
                             inputPath: String,
                             datasetId: Option[String] = None,
                             sessionId: Option[String] = None) extends ProcessingStep {
-  override def copyValues(values: Map[String, String]) = {
-    copy(datasetId = values.get("datasetId"), sessionId = values.get("sessionId"))
+  override def copyValues(values: Map[String, _]) = {
+    copy(
+      datasetId = values.get("datasetId").map(_.asInstanceOf[String]),
+      sessionId = values.get("sessionId").map(_.asInstanceOf[String]))
   }
 }
 
 case class ProcessingSteps(steps: List[ProcessingStep])
 
-case class ProcessingStepMaps(steps: List[Map[String, String]])
+case class ProcessingStepMaps(steps: List[Map[String, _]])
 
 object JsonOpsDemo {
   private implicit val Formats: Formats = Serialization.formats(ShortTypeHints(List(
@@ -51,7 +53,7 @@ object JsonOpsDemo {
 
     val stepJson = parse(stepAsStr)
 
-    val stepAsMap = stepJson.extract[Map[String, String]]
+    val stepAsMap = stepJson.extract[Map[String, _]]
 
     println("processing step map: " + stepAsMap)
 
@@ -63,7 +65,7 @@ object JsonOpsDemo {
     println("dataset load step json: " + datasetLoadStepJsonStr)
 
     val datasetLoadStepJson = parse(datasetLoadStepJsonStr)
-    val datasetLoadStepJsonMap = datasetLoadStepJson.extract[Map[String, String]] ++ (stepAsMap - "jsonClass")
+    val datasetLoadStepJsonMap = datasetLoadStepJson.extract[Map[String, _]] ++ (stepAsMap - "jsonClass")
 
     println("dataset load step json map: " + datasetLoadStepJsonMap)
 
