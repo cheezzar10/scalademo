@@ -1,0 +1,17 @@
+1. Building the project
+
+$ sbt compile
+
+2. Running the project
+
+$ sbt run
+
+after that you can choose from the list of all Main classes in the project and run the chosen one
+
+3. Running Scala REPL using sbt with configured classpath
+
+$ sbt console
+
+4. Getting the type of value when in Scala REPL
+
+scala> :type null ( or wherever value you wish )
