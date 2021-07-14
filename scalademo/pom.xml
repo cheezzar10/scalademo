@@ -16,6 +16,7 @@
     <commons.lang.version>3.5</commons.lang.version>
     <scalatest.version>3.0.5</scalatest.version>
     <json4s.version>3.6.11</json4s.version>
+    <cats.version>2.0.0</cats.version>
   </properties>
 
   <dependencies>
@@ -38,6 +39,11 @@
       <groupId>org.json4s</groupId>
       <artifactId>json4s-jackson_${scala.binary.version}</artifactId>
       <version>${json4s.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.typelevel</groupId>
+      <artifactId>cats-core_${scala.binary.version}</artifactId>
+      <version>${cats.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
