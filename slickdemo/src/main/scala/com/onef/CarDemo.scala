@@ -23,7 +23,8 @@ object CarDemo {
     // TODO abstract over database type ( see ES 5.1.1 )
     createDbSchema(db)
 
-    insertNewCars(db)
+    // insertNewCars(db)
+    insertNewCarIfNotExists(db, "BMW", "320d")
 
     // TODO load records from DB
     selectAllCars(db)
@@ -85,6 +86,32 @@ object CarDemo {
     val selectedCars = Await.result(db.run(cars.result), Duration.Inf)
 
     println(s"selected cars: $selectedCars")
+  }
+
+  private def insertNewCarIfNotExists(db: Database, name: String, model: String): Unit = {
+    println(s"inserting new car with name: $name and model: $model")
+
+    val imageBytes = Files.readAllBytes(Paths.get(sys.props("user.home"), "Downloads", "320d.jpg"))
+    val imageBlob = new SerialBlob(imageBytes)
+
+    import Cars.Cars
+
+    val carInsertionAction = Cars.filter(car => car.name === name && car.model === model)
+      .result
+      .headOption
+      .flatMap {
+        case Some(existingCar) => {
+          println(s"car with name: $name and model: $model already exists")
+          DBIO.successful(existingCar.id)
+        }
+        case None => {
+          println(s"creating car with name: $name and model: $model")
+          (Cars returning Cars.map(_.id)) += Car(name, model, imageBlob, 2)
+        }
+      }
+
+    val carInsertionActionResult = Await.result(db.run(carInsertionAction.transactionally), Duration.Inf)
+    println("car insertion creation action result: " + carInsertionActionResult)
   }
 
   private def insertNewCars(db: Database): Unit = {

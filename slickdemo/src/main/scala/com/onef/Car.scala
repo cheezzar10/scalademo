@@ -28,6 +28,8 @@ class CarTable(tag: Tag) extends Table[Car](tag, "car") {
   override def * = (name, model, image, ownerId, id).mapTo[Car]
 
   def owner = foreignKey("owner_fk", ownerId, Owners.Owners)(_.id)
+
+  def nameModelIndex = index("car_name_model_idx", (name, model), unique = true)
 }
 
 object Cars {
