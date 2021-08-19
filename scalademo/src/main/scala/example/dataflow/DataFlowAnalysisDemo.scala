@@ -1,23 +1,40 @@
 package example.dataflow
 
-import ColumnScalarFunctions._
+import RowFunctions._
+import AggregationFunctions._
 
 object DataFlowAnalysisDemo {
   def main(args: Array[String]): Unit = {
-    val transformStage = new NonAggTransformer(
+    val aggTransformer = AggTransformer(
+      inputDataset = "features",
+      inputColumns = IndexedSeq("feature1", "feature2"),
+      groupByColumns = IndexedSeq("id"),
+      functions = IndexedSeq(Mean, Mean),
+      outputDataset = "features_direct",
+      outputColumns = IndexedSeq("feature1_agg", "feature2_agg"))
+
+    val nonAggTransformer = NonAggTransformer(
+      inputDataset = "features",
       inputColumns = IndexedSeq("feature31", "feature32"),
+      outputDataset = "features_transformed",
       outputColumns = IndexedSeq("src2_feature31_agg5", "src2_feature32_agg3"),
       functions = IndexedSeq(Some(If), Some(If)),
       functionNumArgs = IndexedSeq(IndexedSeq(3.0, 0.0), IndexedSeq(0.0, 181.0)),
       functionStrArgs = IndexedSeq(IndexedSeq.empty, IndexedSeq.empty))
 
-    println("used columns: " + transformStage.usedColumns)
+    println("row transformer used columns: " + nonAggTransformer.usedColumns)
 
-    val scoringStage = new ScoringModelTransformer(
+    val joinTransformer = JoinTransformer(
+      inputDatasets = IndexedSeq("features_direct", "features_transformed"),
+      joinColumns = IndexedSeq(IndexedSeq("id"), IndexedSeq("id")),
+      outputDataset = "collected_features")
+
+    val scoringStage = ScoringModelTransformer(
+      inputDataset = "collected_features",
       outputColumns = IndexedSeq("score"),
-      featureNames = IndexedSeq("src2_feature31_agg5"))
+      featureNames = IndexedSeq("feature1_agg", "src2_feature31_agg5", "feature2_agg"))
 
-    val pipeline = Pipeline(stages = IndexedSeq(transformStage, scoringStage))
+    val pipeline = Pipeline(stages = IndexedSeq(aggTransformer, nonAggTransformer, joinTransformer, scoringStage))
 
     val dataFlowGraph = new DataFlowGraph(pipeline)
     dataFlowGraph.computeLivenessSets()
@@ -26,8 +43,6 @@ object DataFlowAnalysisDemo {
 
     val optimizedPipeline = dataFlowGraph.optimizePipeline()
     println("optimized pipeline: " + optimizedPipeline)
-
-    outputColumnsFiltering()
   }
 
   private def outputColumnsFiltering(): Unit = {

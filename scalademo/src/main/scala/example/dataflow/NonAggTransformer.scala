@@ -1,15 +1,15 @@
 package example.dataflow
 
 case class NonAggTransformer(
-  val inputColumns: IndexedSeq[String],
-  val outputColumns: IndexedSeq[String],
-  val functions: IndexedSeq[Option[ColumnScalarFunction]],
-  val functionNumArgs: IndexedSeq[IndexedSeq[Double]],
-  val functionStrArgs: IndexedSeq[IndexedSeq[String]]) extends Transformer {
+  inputDataset: String,
+  inputColumns: IndexedSeq[String],
+  outputDataset: String,
+  outputColumns: IndexedSeq[String],
+  functions: IndexedSeq[Option[RowFunction]],
+  functionNumArgs: IndexedSeq[IndexedSeq[Double]],
+  functionStrArgs: IndexedSeq[IndexedSeq[String]]) extends Transformer {
 
   def usedColumns: IndexedSeq[String] = {
-    // add all columns serving as function inputs
-
     (for ((columnFunction, columnFunctionIndex) <- functions.zipWithIndex) yield {
       columnFunction match {
         case Some(function) => Some(inputColumns(columnFunctionIndex))
@@ -20,6 +20,7 @@ case class NonAggTransformer(
 
   def selectColumns(liveColumnIndexes: IndexedSeq[Int]): Transformer = {
     println("selection: " + liveColumnIndexes)
+
     copy(
       inputColumns = select(inputColumns, liveColumnIndexes),
       outputColumns = select(outputColumns, liveColumnIndexes),

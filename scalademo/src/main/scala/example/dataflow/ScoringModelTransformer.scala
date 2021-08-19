@@ -1,8 +1,9 @@
 package example.dataflow
 
-class ScoringModelTransformer(
-  val outputColumns: IndexedSeq[String],
-  val featureNames: IndexedSeq[String]) extends Transformer {
+case class ScoringModelTransformer(
+  inputDataset: String,
+  outputColumns: IndexedSeq[String],
+  featureNames: IndexedSeq[String]) extends Transformer {
 
   def inputColumns: IndexedSeq[String] = featureNames
 
