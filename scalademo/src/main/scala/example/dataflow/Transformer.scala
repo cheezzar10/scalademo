@@ -14,7 +14,7 @@ trait Transformer {
   def selectColumns(liveColumnIndexes: IndexedSeq[Int]): Transformer
 
   def select[A](indexedSeq: IndexedSeq[A], selectedIndexes: IndexedSeq[Int]): IndexedSeq[A] = {
-    println(s"$indexedSeq selected indexes: $selectedIndexes")
+    // println(s"$indexedSeq selected indexes: $selectedIndexes")
 
     selectedIndexes.foldLeft(IndexedSeq.empty[A]) {
       case (selectedSeq, selectedIndex) => selectedSeq :+ indexedSeq(selectedIndex)

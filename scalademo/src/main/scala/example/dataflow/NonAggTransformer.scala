@@ -19,7 +19,7 @@ case class NonAggTransformer(
   }
 
   def selectColumns(liveColumnIndexes: IndexedSeq[Int]): Transformer = {
-    println("selection: " + liveColumnIndexes)
+    // println("selection: " + liveColumnIndexes)
 
     copy(
       inputColumns = select(inputColumns, liveColumnIndexes),

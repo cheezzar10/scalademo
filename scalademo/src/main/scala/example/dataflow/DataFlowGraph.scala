@@ -47,10 +47,10 @@ class DataFlowGraph(val pipeline: Pipeline) {
 
       for (currentStageIndex <- stages.indices.reverse) {
         val currentStage = stages(currentStageIndex)
-        println("processing stage: " + currentStageIndex)
+        // println("processing stage: " + currentStageIndex)
 
         val subsequentStages = findSubsequentStages(currentStageIndex)
-        println(s"subsequent stages: ${subsequentStages}");
+        // println(s"subsequent stages: ${subsequentStages}");
 
         val currentStageLiveOut = liveOut(currentStageIndex)
 
@@ -73,29 +73,34 @@ class DataFlowGraph(val pipeline: Pipeline) {
     }
   }
 
-  def optimizePipeline(): Pipeline = {
+  def optimizePipeline(): (Pipeline, Boolean) = {
+    // TODO try to optimise backwards and drop optimized out columns from corresponding liveOut sets
+    // basically, recompute liveness set for predecessor
     val optimizedPipelineStages = for {
       (currentStage, currentStageIndex) <- pipeline.stages
         .take(pipeline.stages.size - 1)
         .zipWithIndex
 
     } yield {
-      println("optimizing stage: " + currentStageIndex)
+      // println("optimizing stage: " + currentStageIndex)
 
       val pipelineStageLiveColumns = liveOut(currentStageIndex)
+      // println(s"pipeline stage ${currentStageIndex} live columns: ${pipelineStageLiveColumns}")
 
-      println(s"pipeline stage ${currentStageIndex} live columns: ${pipelineStageLiveColumns}")
+      val pipelineStageOutputColumns = currentStage.outputColumns
+      // println(s"pipeline stage ${currentStageIndex} output columns: ${pipelineStageOutputColumns}")
 
-      val liveColumnIndexes = currentStage.outputColumns.zipWithIndex.flatMap {
+      val liveColumnIndexes = pipelineStageOutputColumns.zipWithIndex.flatMap {
         case (outColName, outColIndex) =>
           if (pipelineStageLiveColumns.contains(outColName)) IndexedSeq(outColIndex)
           else IndexedSeq.empty
       }
 
-      currentStage.selectColumns(liveColumnIndexes)
+      val optimized = !(pipelineStageOutputColumns.toSet diff pipelineStageLiveColumns.toSet).isEmpty
+      (currentStage.selectColumns(liveColumnIndexes), optimized)
     }
 
-    Pipeline(optimizedPipelineStages :+ pipeline.stages.last)
+    (Pipeline(optimizedPipelineStages.map(_._1) :+ pipeline.stages.last), optimizedPipelineStages.exists(_._2))
   }
 
   private def findSubsequentStages(currentStageIndex: Int): IndexedSeq[(Transformer, Int)] = {
