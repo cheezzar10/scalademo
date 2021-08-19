@@ -41,22 +41,28 @@ class DataFlowGraph(val pipeline: Pipeline) {
   }
 
   def optimizePipeline(): Pipeline = {
-    val optiizedPipelineStages = for (currentStageIndex <- 0 until (pipeline.stages.size - 1)) yield {
+    val optimizedPipelineStages = for {
+      (currentStage, currentStageIndex) <- pipeline.stages
+        .take(pipeline.stages.size - 1)
+        .zipWithIndex
+
+    } yield {
       println("optimizing stage: " + currentStageIndex)
 
-      val pipelineStage = pipeline.stages(currentStageIndex)
       val pipelineStageLiveColumns = liveOut(currentStageIndex)
 
       println(s"pipeline stage ${currentStageIndex} live columns: ${pipelineStageLiveColumns}")
 
-      val liveColumnIndexes = pipelineStage.outputColumns.zipWithIndex.flatMap {
-        case (outColName, outColIndex) => if (pipelineStageLiveColumns.contains(outColName)) IndexedSeq(outColIndex) else IndexedSeq.empty
+      val liveColumnIndexes = currentStage.outputColumns.zipWithIndex.flatMap {
+        case (outColName, outColIndex) =>
+          if (pipelineStageLiveColumns.contains(outColName)) IndexedSeq(outColIndex)
+          else IndexedSeq.empty
       }
 
-      pipelineStage.selectColumns(liveColumnIndexes)
+      currentStage.selectColumns(liveColumnIndexes)
     }
 
-    Pipeline(optiizedPipelineStages :+ pipeline.stages.last)
+    Pipeline(optimizedPipelineStages :+ pipeline.stages.last)
   }
 
   private def findNextStage(pipelineStages: IndexedSeq[Transformer], currentStageIndex: Int): Option[Transformer] = {
