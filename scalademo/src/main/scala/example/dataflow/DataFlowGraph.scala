@@ -18,21 +18,20 @@ class DataFlowGraph(val pipeline: Pipeline) {
         val currentStage = stages(currentStageIndex)
         println("processing stage: " + currentStageIndex)
 
-        val nextStage = findNextStage(stages, currentStageIndex)
+        val nextStage = findNextStage(currentStageIndex)
         println("next stage: " + nextStage)
+
+        val currentStageLiveOut = liveOut(currentStageIndex)
 
         nextStage.foreach { stage =>
           val nextStageLiveIn = liveIn(currentStageIndex + 1)
-
-          val currentStageLiveOut = liveOut(currentStageIndex)
-          val diff = nextStageLiveIn diff currentStageLiveOut
-
-          liveOutChanged = !diff.isEmpty
-
           currentStageLiveOut ++= nextStageLiveIn
+
+          val diff = nextStageLiveIn diff currentStageLiveOut
+          liveOutChanged = !diff.isEmpty
         }
 
-        val newLiveIn = liveOut(currentStageIndex).clone()
+        val newLiveIn = currentStageLiveOut.clone()
         newLiveIn ++= currentStage.usedColumns
 
         liveIn(currentStageIndex) = newLiveIn
@@ -65,8 +64,10 @@ class DataFlowGraph(val pipeline: Pipeline) {
     Pipeline(optimizedPipelineStages :+ pipeline.stages.last)
   }
 
-  private def findNextStage(pipelineStages: IndexedSeq[Transformer], currentStageIndex: Int): Option[Transformer] = {
+  private def findNextStage(currentStageIndex: Int): Option[Transformer] = {
     val nextStageIndex = currentStageIndex + 1
+    val pipelineStages = pipeline.stages
+
     if (pipelineStages.isDefinedAt(nextStageIndex)) {
       Some(pipelineStages(nextStageIndex))
     } else {
