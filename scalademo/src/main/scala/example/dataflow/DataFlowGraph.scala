@@ -25,10 +25,11 @@ class DataFlowGraph(val pipeline: Pipeline) {
 
         nextStage.foreach { stage =>
           val nextStageLiveIn = liveIn(currentStageIndex + 1)
-          currentStageLiveOut ++= nextStageLiveIn
 
           val diff = nextStageLiveIn diff currentStageLiveOut
           liveOutChanged = !diff.isEmpty
+
+          currentStageLiveOut ++= nextStageLiveIn
         }
 
         val newLiveIn = currentStageLiveOut.clone()
