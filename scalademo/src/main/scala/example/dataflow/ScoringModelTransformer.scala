@@ -5,6 +5,8 @@ case class ScoringModelTransformer(
   outputColumns: IndexedSeq[String],
   featureNames: IndexedSeq[String]) extends Transformer {
 
+  def outputDataset: String = ???
+
   def inputColumns: IndexedSeq[String] = featureNames
 
   def usedColumns: IndexedSeq[String] = featureNames

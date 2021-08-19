@@ -32,11 +32,13 @@ object DataFlowAnalysisDemo {
     val scoringStage = ScoringModelTransformer(
       inputDataset = "collected_features",
       outputColumns = IndexedSeq("score"),
-      featureNames = IndexedSeq("feature1_agg", "src2_feature31_agg5", "feature2_agg"))
+      featureNames = IndexedSeq("feature1_agg", "src2_feature31_agg5"))
 
     val pipeline = Pipeline(stages = IndexedSeq(aggTransformer, nonAggTransformer, joinTransformer, scoringStage))
 
     val dataFlowGraph = new DataFlowGraph(pipeline)
+
+    dataFlowGraph.computeFlowGraph()
     dataFlowGraph.computeLivenessSets()
 
     // println("live out: " + dataFlowGraph.liveOut)

@@ -5,6 +5,8 @@ trait Transformer {
 
   def outputColumns: IndexedSeq[String]
 
+  def outputDataset: String
+
   def usedColumns: IndexedSeq[String]
 
   def definedColumns: IndexedSeq[String] = outputColumns

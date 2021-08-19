@@ -6,6 +6,37 @@ class DataFlowGraph(val pipeline: Pipeline) {
   private val liveIn = mutable.IndexedSeq.fill(pipeline.stages.size)(mutable.Set.empty[String])
   private val liveOut = mutable.IndexedSeq.fill(pipeline.stages.size)(mutable.Set.empty[String])
 
+  private val successors = mutable.IndexedSeq.fill(pipeline.stages.size)(mutable.Set.empty[Int])
+
+  private def getSubsequentStageIndices(stageIndex: Int): Set[Int] = {
+    if (stageIndex == pipeline.stages.size - 1) Set.empty
+    else {
+      val stage = pipeline.stages(stageIndex)
+      val outputDataset = stage.outputDataset
+
+      // TODO should be expressed with pipelineStage.isDependsOn(outputDataset)
+      pipeline.stages.zipWithIndex.filter {
+        case (AggTransformer(inputDataset, _, _, _, _, _), _) => inputDataset == outputDataset
+        case (NonAggTransformer(inputDataset, _, _, _, _, _, _), _) => inputDataset == outputDataset
+        case (JoinTransformer(inputDatasets, _, _), _) => inputDatasets.contains(outputDataset)
+        case (ScoringModelTransformer(inputDataset, _, _), _) => inputDataset == outputDataset
+        case _ => false
+      }.map(_._2).toSet
+    }
+  }
+
+  def computeFlowGraph(): Unit = {
+    val pipelineStages = pipeline.stages
+
+    for (currentStageIndex <- pipelineStages.indices) {
+      val currentStage = pipelineStages(currentStageIndex)
+
+      val subsequentStageIndices = getSubsequentStageIndices(currentStageIndex)
+
+      successors(currentStageIndex) ++= subsequentStageIndices
+    }
+  }
+
   def computeLivenessSets(): Unit = {
     val stages = pipeline.stages
 
@@ -18,18 +49,20 @@ class DataFlowGraph(val pipeline: Pipeline) {
         val currentStage = stages(currentStageIndex)
         println("processing stage: " + currentStageIndex)
 
-        val nextStage = findNextStage(currentStageIndex)
-        println("next stage: " + nextStage)
+        val subsequentStages = findSubsequentStages(currentStageIndex)
+        println(s"subsequent stages: ${subsequentStages}");
 
         val currentStageLiveOut = liveOut(currentStageIndex)
 
-        nextStage.foreach { stage =>
-          val nextStageLiveIn = liveIn(currentStageIndex + 1)
+        subsequentStages.foreach {
+          case (subsequentStage, subsequentStageIndex) => {
+            val subsequentStageLiveIn = liveIn(subsequentStageIndex)
 
-          val diff = nextStageLiveIn diff currentStageLiveOut
-          liveOutChanged = !diff.isEmpty
+            val diff = subsequentStageLiveIn diff currentStageLiveOut
+            liveOutChanged |= !diff.isEmpty
 
-          currentStageLiveOut ++= nextStageLiveIn
+            currentStageLiveOut ++= subsequentStageLiveIn
+          }
         }
 
         val newLiveIn = currentStageLiveOut.clone()
@@ -65,14 +98,12 @@ class DataFlowGraph(val pipeline: Pipeline) {
     Pipeline(optimizedPipelineStages :+ pipeline.stages.last)
   }
 
-  private def findNextStage(currentStageIndex: Int): Option[Transformer] = {
-    val nextStageIndex = currentStageIndex + 1
+  private def findSubsequentStages(currentStageIndex: Int): IndexedSeq[(Transformer, Int)] = {
+    val subsequentStageIndexes = successors(currentStageIndex)
     val pipelineStages = pipeline.stages
 
-    if (pipelineStages.isDefinedAt(nextStageIndex)) {
-      Some(pipelineStages(nextStageIndex))
-    } else {
-      None
-    }
+    subsequentStageIndexes
+      .map(stageIndex => (pipelineStages(stageIndex), stageIndex))
+      .toIndexedSeq
   }
 }
