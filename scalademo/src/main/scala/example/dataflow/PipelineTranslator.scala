@@ -34,11 +34,9 @@ class PipelineTranslator(val pipeline: Pipeline) {
       // using input columns literally
       println(s"aggregating transformer input dataset '${inputDatasetName}' is not found")
 
-      val translatedOutputColumns = inputColumnNames
-        .zip(outputColumnNames)
-        .zip(aggTransformer.functions)
+      val translatedOutputColumns = (inputColumnNames, outputColumnNames, aggTransformer.functions).zipped
         .map {
-          case ((inputColumnName, outputColumnName), aggregationFunction) =>
+          case (inputColumnName, outputColumnName, aggregationFunction) =>
             outputColumnName -> s"${inputColumnName}>${aggregationFunction.name}"
         }.toMap
 
@@ -92,7 +90,7 @@ class PipelineTranslator(val pipeline: Pipeline) {
         .map {
           case ((inputColumnName, outputColumnName), (transformationFunction, transformationFunctionNumArgs, transformationFunctionStrArgs)) => {
             val translatedTransformationFunction = transformationFunction.translateToString(transformationFunctionNumArgs, transformationFunctionStrArgs)
-            outputColumnName -> s"$outputColumnName>$translatedTransformationFunction"
+            outputColumnName -> s"$inputColumnName>$translatedTransformationFunction"
           }
         }.toMap
 
