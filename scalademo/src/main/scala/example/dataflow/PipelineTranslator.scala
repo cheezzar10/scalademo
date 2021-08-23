@@ -22,12 +22,12 @@ class PipelineTranslator(val pipeline: Pipeline) {
     val modelStage = modelStages.head
     val modelStageInputDataset = datasetsTable(dataPrepStages.last.outputDataset)
 
-    val modelStageInputDatasetOutputColumnsTranslation = modelStageInputDataset.outputColumns
-      .zip(modelStageInputDataset.translatedOutputColumns)
+    val modelStageInputDatasetColumnsTranslation = modelStageInputDataset.columns
+      .zip(modelStageInputDataset.translatedColumns)
       .toMap
 
-    modelStage.inputColumns.map { modelInputCumnName =>
-      modelStageInputDatasetOutputColumnsTranslation(modelInputCumnName)
+    modelStage.inputColumns.map { modelInputColumnName =>
+      modelStageInputDatasetColumnsTranslation(modelInputColumnName)
     }
   }
 
@@ -55,30 +55,28 @@ class PipelineTranslator(val pipeline: Pipeline) {
 
       datasetsTable(outputDatasetName) = DatasetDescriptor(
         name = outputDatasetName,
-        inputColumns = inputColumnNames,
-        outputColumns = outputColumnNames,
-        translatedOutputColumns = outputColumnNames.map(translatedOutputColumns))
+        columns = outputColumnNames,
+        translatedColumns = outputColumnNames.map(translatedOutputColumns))
 
     } else {
       val inputDataset = inputDatasetOpt.get
 
       println(s"aggregating transformer input dataset '${inputDatasetName}' found: ${inputDataset}")
 
-      val translatedOutputColumns = inputDataset.translatedOutputColumns
-        .zip(inputDataset.outputColumns)
+      val translatedOutputColumns = inputDataset.translatedColumns
+        .zip(inputDataset.columns)
         .zip(aggTransformer.functions)
         .map {
-          case ((upstreamTransformation, outputColumnName), aggregationFunction) =>
-            outputColumnName -> s"${upstreamTransformation}|${aggregationFunction.name}"
+          case ((upstreamTransformation, inputColumnName), aggregationFunction) =>
+            inputColumnName -> s"${upstreamTransformation}|${aggregationFunction.name}"
         }.toMap
 
       println(s"existing dataset translated output columns: ${translatedOutputColumns}")
 
       datasetsTable(outputDatasetName) = DatasetDescriptor(
         name = outputDatasetName,
-        inputColumns = inputColumnNames,
-        outputColumns = outputColumnNames,
-        translatedOutputColumns = inputColumnNames.map(translatedOutputColumns))
+        columns = outputColumnNames,
+        translatedColumns = inputColumnNames.map(translatedOutputColumns))
     }
   }
 
@@ -107,9 +105,8 @@ class PipelineTranslator(val pipeline: Pipeline) {
 
       datasetsTable(outputDatasetName) = DatasetDescriptor(
         name = outputDatasetName,
-        inputColumns = inputColumnNames,
-        outputColumns = outputColumnNames,
-        translatedOutputColumns = outputColumnNames.map(translatedOutputColumns))
+        columns = outputColumnNames,
+        translatedColumns = outputColumnNames.map(translatedOutputColumns))
 
     } else {
       val inputDataset = inputDatasetOpt.get
@@ -128,14 +125,12 @@ class PipelineTranslator(val pipeline: Pipeline) {
       datasetsTable.get(inputDatasetName)
     }
 
-    val joinedInputColumns = inputDatasets.flatMap(_.inputColumns)
-    val joinedOutputColumns = inputDatasets.flatMap(_.outputColumns)
-    val joinedTranslatedOutputColumns = inputDatasets.flatMap(_.translatedOutputColumns)
+    val joinedColumns = inputDatasets.flatMap(_.columns)
+    val joinedTranslatedColumns = inputDatasets.flatMap(_.translatedColumns)
 
     datasetsTable(outputDatasetName) = DatasetDescriptor(
       name = outputDatasetName,
-      inputColumns = joinedInputColumns,
-      outputColumns = joinedOutputColumns,
-      translatedOutputColumns = joinedTranslatedOutputColumns)
+      columns = joinedColumns,
+      translatedColumns = joinedTranslatedColumns)
   }
 }
