@@ -16,8 +16,19 @@ class PipelineTranslator(val pipeline: Pipeline) {
       }
     }
 
-    val lastTransformStage = pipeline.stages.reverse.find(t => !t.isInstanceOf[ScoringModelTransformer]).get
-    datasetsTable(lastTransformStage.outputDataset).translatedOutputColumns
+    val (modelStages, dataPrepStages) = pipeline.stages
+      .partition(stage => stage.isInstanceOf[ScoringModelTransformer])
+
+    val modelStage = modelStages.head
+    val modelStageInputDataset = datasetsTable(dataPrepStages.last.outputDataset)
+
+    val modelStageInputDatasetOutputColumnsTranslation = modelStageInputDataset.outputColumns
+      .zip(modelStageInputDataset.translatedOutputColumns)
+      .toMap
+
+    modelStage.inputColumns.map { modelInputCumnName =>
+      modelStageInputDatasetOutputColumnsTranslation(modelInputCumnName)
+    }
   }
 
   private def translateAggTransformerStage(aggTransformer: AggTransformer): Unit = {
@@ -67,7 +78,7 @@ class PipelineTranslator(val pipeline: Pipeline) {
         name = outputDatasetName,
         inputColumns = inputColumnNames,
         outputColumns = outputColumnNames,
-        translatedOutputColumns = outputColumnNames.map(translatedOutputColumns))
+        translatedOutputColumns = inputColumnNames.map(translatedOutputColumns))
     }
   }
 
