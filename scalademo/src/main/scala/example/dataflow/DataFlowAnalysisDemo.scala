@@ -5,6 +5,31 @@ import AggregationFunctions._
 
 object DataFlowAnalysisDemo {
   def main(args: Array[String]): Unit = {
+    val pipeline = createPipeline()
+
+    def loop(inputPipeline: Pipeline, wasOptimized: Boolean): Pipeline = {
+      if (!wasOptimized) inputPipeline
+      else {
+        val dataFlowGraph = new DataFlowGraph(inputPipeline)
+        dataFlowGraph.computeFlowGraph()
+        dataFlowGraph.computeLivenessSets()
+
+        val (optimizedPipeline, optimized) = dataFlowGraph.optimizePipeline()
+
+        loop(optimizedPipeline, optimized)
+      }
+    }
+
+    val finalPipeline = loop(pipeline, true)
+    println(s"final pipeline: ${finalPipeline}")
+
+    val pipelineTranslator = new PipelineTranslator(finalPipeline)
+    val translatedFeatures: IndexedSeq[String] = pipelineTranslator.translate()
+
+    println(s"translated features: ${translatedFeatures}")
+  }
+
+  private def createPipeline(): Pipeline = {
     val aggTransformer = AggTransformer(
       inputDataset = "features",
       inputColumns = IndexedSeq("feature1", "feature2"),
@@ -21,8 +46,6 @@ object DataFlowAnalysisDemo {
       functions = IndexedSeq(Some(If), Some(If)),
       functionNumArgs = IndexedSeq(IndexedSeq(3.0, 0.0), IndexedSeq(0.0, 181.0)),
       functionStrArgs = IndexedSeq(IndexedSeq.empty, IndexedSeq.empty))
-
-    // println("row transformer used columns: " + nonAggTransformer.usedColumns)
 
     val circles0JoinTransformer = JoinTransformer(
       inputDatasets = IndexedSeq("circles_0", "features_direct", "features_transformed"),
@@ -60,7 +83,7 @@ object DataFlowAnalysisDemo {
       outputColumns = IndexedSeq("score"),
       featureNames = IndexedSeq("feature1_agg", "src2_feature31_agg5"))
 
-    val pipeline = Pipeline(stages = IndexedSeq(
+    Pipeline(stages = IndexedSeq(
       aggTransformer,
       nonAggTransformer,
       circles0JoinTransformer,
@@ -69,45 +92,5 @@ object DataFlowAnalysisDemo {
       circle4AggTransformer,
       joinTransformer,
       scoringStage))
-
-    def loop(inputPipeline: Pipeline, wasOptimized: Boolean): Pipeline = {
-      if (!wasOptimized) inputPipeline
-      else {
-        val dataFlowGraph = new DataFlowGraph(inputPipeline)
-        dataFlowGraph.computeFlowGraph()
-        dataFlowGraph.computeLivenessSets()
-
-        val (optimizedPipeline, optimized) = dataFlowGraph.optimizePipeline()
-        println(s"optimized pipeline: ${optimizedPipeline}, optimized: ${optimized}")
-
-        loop(optimizedPipeline, optimized)
-      }
-    }
-
-    val finalPipeline = loop(pipeline, true)
-    println(s"final pipeline: ${finalPipeline}")
-  }
-
-  private def outputColumnsFiltering(): Unit = {
-    val outCols = IndexedSeq("feature1", "feature2", "feature3", "feature4")
-
-    // TODO compute indexes of retained columns
-    val liveOut = Set("feature2", "feature4")
-
-    val retainedColIndexes = outCols.zipWithIndex.flatMap {
-      case (outColName, outColIndex) => if (liveOut.contains(outColName)) IndexedSeq(outColIndex) else IndexedSeq.empty
-    }
-
-    println("retained column indexes: " + retainedColIndexes)
-
-    val optimizedOutCols = select(outCols, retainedColIndexes)
-
-    println("optimized columns set: " + optimizedOutCols)
-  }
-
-  private def select[A](indexedSeq: IndexedSeq[A], selectedIndexes: IndexedSeq[Int]): IndexedSeq[A] = {
-    selectedIndexes.foldLeft(IndexedSeq.empty[A]) {
-      case (selectedSeq, selectedIndex) => selectedSeq :+ indexedSeq(selectedIndex)
-    }
   }
 }

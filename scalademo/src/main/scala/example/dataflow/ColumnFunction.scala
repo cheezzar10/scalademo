@@ -6,7 +6,12 @@ sealed trait ColumnFunction {
   override def toString: String = s"function: '$name'"
 }
 
-trait RowFunction extends ColumnFunction
+// to class, with name field
+trait RowFunction extends ColumnFunction {
+  def translateToString(numArgs: IndexedSeq[Double], strArgs: IndexedSeq[String]): String = {
+    s"""$name@${numArgs.mkString(",")}"""
+  }
+}
 
 object RowFunctions {
   object If extends RowFunction {

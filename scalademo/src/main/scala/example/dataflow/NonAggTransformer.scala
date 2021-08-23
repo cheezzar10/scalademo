@@ -28,4 +28,13 @@ case class NonAggTransformer(
       functionNumArgs = select(functionNumArgs, liveColumnIndexes),
       functionStrArgs = select(functionStrArgs, liveColumnIndexes))
   }
+
+  def functionsWithArgs: IndexedSeq[(RowFunction, IndexedSeq[Double], IndexedSeq[String])] = {
+    functions.map(_.get)
+      .zip(functionNumArgs)
+      .zip(functionStrArgs)
+      .map {
+        case ((func, numArgs), strArgs) => (func, numArgs, strArgs)
+      }
+  }
 }
