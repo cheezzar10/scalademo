@@ -3,9 +3,10 @@ package example.futures
 import example.Logger.log
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Promise
 
 object FuturesDemo {
   def main(args: Array[String]): Unit = {
@@ -25,7 +26,22 @@ object FuturesDemo {
       log("mapping function completed")
 
       s.toInt
-    })
+    }).flatMap { i =>
+      val activityCompletionPromise = Promise[Int]
+
+      val summationActivityThread = new Thread(new Runnable {
+        def run(): Unit = {
+          log("performing summation")
+          Thread.sleep(50)
+          activityCompletionPromise.success(i + 2)
+        }
+      }, "summing thread")
+      summationActivityThread.start()
+
+      activityCompletionPromise.future
+    }.map { sum =>
+      log(s"sum = $sum")
+    }
 
     log(s"async activity completed: ${asyncActivity.isCompleted}")
 
