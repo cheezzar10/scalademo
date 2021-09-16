@@ -1,12 +1,19 @@
 package example.quiz
 
+import scala.collection.mutable
+import annotation.tailrec
+
 object ParensBalance {
   def main(args: Array[String]): Unit = {
-    val str = "]"
+    val str = "[()]"
     println(s"'$str' is balanced: ${isBalanced(str)}")
+
+    val r = isBalanced(str)
+    println("result: " + r)
   }
 
   private def isBalanced(str: String) = {
+    @tailrec
     def loop(chars: List[Char], stack: List[Char]): Boolean = chars match {
       case chr :: tail => chr match {
         case '(' => loop(tail, ')' :: stack)
