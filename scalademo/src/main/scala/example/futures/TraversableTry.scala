@@ -7,8 +7,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 
-import cats.instances.option._
-import cats.instances.list._
+import cats.instances.try_._
+import cats.instances.vector._
+
 import cats.syntax.traverse._ // for xs.sequence
 
 object TraversableTry {
@@ -16,7 +17,7 @@ object TraversableTry {
     val strings = IndexedSeq("1", "10", "8", "2")
 
     println("result: " + sequenceWithFuture(strings))
-    println("result: " + sequenceWithCats(strings.toList))
+    println("result: " + sequenceWithCats(strings.toVector))
     println("result: " + sequenceManually(strings))
   }
 
@@ -30,10 +31,8 @@ object TraversableTry {
     result.value.get
   }
 
-  private def sequenceWithCats(strings: List[String]): Option[List[Int]] = {
-    val numbers = strings.map(str => Try(str.toInt).toOption)
-
-    numbers.sequence
+  private def sequenceWithCats(strings: Vector[String]): Try[Vector[Int]] = {
+    strings.map(str => Try(str.toInt)).sequence
   }
 
   private def sequenceManually(strings: IndexedSeq[String]): Try[IndexedSeq[Int]] = {
