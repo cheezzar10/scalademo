@@ -11,10 +11,10 @@ import scala.util.matching.Regex
 object DirWalker {
   private val BuildSbtFileName: String = "build.sbt"
   private val VersionFileName: String = "version.properties"
-  private val ModuleVersionPattern: Regex = """\w+\.version=(\d+)\.(\d+)\.(\d+)""".r
+  private val ModuleVersionPattern: Regex = """[-a-zA-Z0-9_]+\.version=(\d+)\.(\d+)\.(\d+)""".r
 
   def main(args: Array[String]): Unit = {
-    val rootDirPath = Paths.get(sys.props("user.home"), "Documents/onefactor/ml-playground")
+    val rootDirPath = Paths.get(sys.props("user.home"), "Documents/onefactor/ml-playground-copy")
 
     val fileSearcher = new FileSearchVisitor(rootDirPath, BuildSbtFileName)
     Files.walkFileTree(rootDirPath, fileSearcher)
@@ -68,8 +68,11 @@ object DirWalker {
           println("minor version: " + minor)
 
           val incrementedMinorVersion = minor.toInt + 1
+
           val updatedVersionFileContent = versionFileContent
-            .replace(s"$major.$minor.$bugfix", s"$major.$incrementedMinorVersion.$bugfix")
+            .replace(
+              s"$major.$minor.$bugfix",
+              s"$major.$incrementedMinorVersion.0")
 
           println("updated version file content: '" + updatedVersionFileContent + "'")
           Files.write(versionFileAbsolutePath, Seq(updatedVersionFileContent).asJava)
