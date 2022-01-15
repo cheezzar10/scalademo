@@ -14,7 +14,7 @@ object DirWalker {
   private val ModuleVersionPattern: Regex = """[-a-zA-Z0-9_]+\.version=(\d+)\.(\d+)\.(\d+)""".r
 
   def main(args: Array[String]): Unit = {
-    val rootDirPath = Paths.get(sys.props("user.home"), "Documents/onefactor/ml-playground-copy")
+    val rootDirPath = Paths.get(sys.props("user.home"), "Documents/onefactor/ml-playground")
 
     val fileSearcher = new FileSearchVisitor(rootDirPath, BuildSbtFileName)
     Files.walkFileTree(rootDirPath, fileSearcher)
