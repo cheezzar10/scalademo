@@ -18,7 +18,7 @@ object Main {
     // val sink = Sink.foreach(println)
     implicit val system = ActorSystem()
 
-    val sinkActor = system.actorOf(Props[SinkActor])
+    val sinkActor = system.actorOf(Props[SinkActor], "SinkActor")
     val sink = Sink.actorRef(sinkActor, SinkActor.StreamCompleted)
     val runnableGraph = source.to(sink)
 

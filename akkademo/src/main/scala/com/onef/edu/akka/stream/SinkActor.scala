@@ -11,9 +11,10 @@ class SinkActor extends Actor {
 
   override def receive = {
     case  StreamCompleted => {
-      println("stream completion message received.")
+      println("stream completion message received by actor: " + self.path)
       // TODO use more graceful shutdown scheme ()
-      context.system.terminate()
+      // context.system.terminate()
+      context.stop(context.parent)
     }
     case msg => println("stream message received: " + msg)
   }
