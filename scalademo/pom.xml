@@ -11,12 +11,12 @@
   <name>scala-demo</name>
 
   <properties>
-    <scala.binary.version>2.11</scala.binary.version>
-    <scala.version>${scala.binary.version}.12</scala.version>
+    <scala.binary.version>2.13</scala.binary.version>
+    <scala.version>${scala.binary.version}.6</scala.version>
     <commons.lang.version>3.5</commons.lang.version>
-    <scalatest.version>3.0.5</scalatest.version>
-    <json4s.version>3.6.11</json4s.version>
-    <cats.version>2.0.0</cats.version>
+    <scalatest.version>3.2.11</scalatest.version>
+    <json4s.version>3.6.12</json4s.version>
+    <cats.version>2.7.0</cats.version>
   </properties>
 
   <dependencies>
